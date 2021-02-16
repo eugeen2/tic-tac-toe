@@ -26,6 +26,7 @@ function Square(props) {
 }
 
 class Board extends React.Component {
+
   constructor(props) {
     super(props);
     this.state = {
@@ -35,10 +36,16 @@ class Board extends React.Component {
   }
 
   handlerClick(i) {
+
     // 注意，我们调用了 .slice() 方法创建了 squares 数组的一个副本，而不是直接在现有的数组上进行修改。
     // 为什么不可变性在 React 中非常重要?  1.简化复杂的功能  2.跟踪数据的改变  3.确定在 React 中何时重新渲染
     const squares = this.state.squares.slice();
+
     console.log(squares);
+    if (calculateWinner(squares) || squares[i]) {
+      return;
+    }
+
     squares[i] = this.state.xIsNext ? 'X' : 'O';
     this.setState({ squares: squares, xIsNext: !this.state.xIsNext });
   }
@@ -54,9 +61,14 @@ class Board extends React.Component {
   }
 
   render() {
-    // const status = 'Next player: X';
-    const status = 'Next player: ' + (this.state.xIsNext ? 'X' : 'O');
-    
+    const winner = calculateWinner(this.state.squares);
+    let status;
+    if (winner) {
+      status = 'Winner' + winner;
+    } else {
+      status = 'Next player: ' + (this.state.xIsNext ? 'X' : 'O');
+    }
+
     return (
       <div>
         <div className="status">{status}</div>
@@ -102,3 +114,24 @@ ReactDOM.render(
   <Game />,
   document.getElementById('root')
 );
+
+/* 传入长度为 9 的数组，此函数将判断出获胜者，并根据情况返回 “X”，“O” 或 “null”。 */
+function calculateWinner(squares) {
+  const lines = [
+    [0, 1, 2],
+    [3, 4, 5],
+    [6, 7, 8],
+    [0, 3, 6],
+    [1, 4, 7],
+    [2, 5, 8],
+    [0, 4, 8],
+    [2, 4, 6],
+  ];
+  for (let i = 0; i < lines.length; i++) {
+    const [a, b, c] = lines[i];
+    if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
+      return squares[a];
+    }
+  }
+  return null;
+}
