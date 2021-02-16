@@ -4,12 +4,7 @@ import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 
-/* ReactDOM.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
-  document.getElementById('root')
-); */
+
 
 // If you want to start measuring performance in your app, pass a function
 // to log results (for example: reportWebVitals(console.log))
@@ -27,51 +22,18 @@ function Square(props) {
 
 class Board extends React.Component {
 
-  constructor(props) {
-    super(props);
-    this.state = {
-      squares: Array(9).fill(null),
-      xIsNext: true
-    }
-  }
-
-  handlerClick(i) {
-
-    // 注意，我们调用了 .slice() 方法创建了 squares 数组的一个副本，而不是直接在现有的数组上进行修改。
-    // 为什么不可变性在 React 中非常重要?  1.简化复杂的功能  2.跟踪数据的改变  3.确定在 React 中何时重新渲染
-    const squares = this.state.squares.slice();
-
-    console.log(squares);
-    if (calculateWinner(squares) || squares[i]) {
-      return;
-    }
-
-    squares[i] = this.state.xIsNext ? 'X' : 'O';
-    this.setState({ squares: squares, xIsNext: !this.state.xIsNext });
-  }
-
-
   renderSquare(i) {
     /* 现在我们从 Board 组件向 Square 组件中传递两个 props 参数：value 和 onClick。
       onClick prop 是一个 Square 组件点击事件监听函数 */
     return <Square
-      value={this.state.squares[i]}
-      onClick={() => this.handlerClick(i)}
+      value={this.props.squares[i]}
+      onClick={() => this.props.onClick(i)}
     />
   }
 
   render() {
-    const winner = calculateWinner(this.state.squares);
-    let status;
-    if (winner) {
-      status = 'Winner' + winner;
-    } else {
-      status = 'Next player: ' + (this.state.xIsNext ? 'X' : 'O');
-    }
-
     return (
       <div>
-        <div className="status">{status}</div>
         <div className="board-row">
           {this.renderSquare(0)}
           {this.renderSquare(1)}
@@ -93,14 +55,56 @@ class Board extends React.Component {
 }
 
 class Game extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      history: [{
+        squares: Array(9).fill(null)
+      }],
+      xIsNext: true
+    }
+  }
+
+  handlerClick(i) {
+    const history = this.state.history;
+    const current = history[history.length - 1];
+    // 注意，我们调用了 .slice() 方法创建了 squares 数组的一个副本，而不是直接在现有的数组上进行修改。
+    // 为什么不可变性在 React 中非常重要?  1.简化复杂的功能  2.跟踪数据的改变  3.确定在 React 中何时重新渲染
+    const squares = current.squares.slice();
+
+    if (calculateWinner(squares) || squares[i]) {
+      return;
+    }
+    squares[i] = this.state.xIsNext ? 'X' : 'O';
+    this.setState({
+      history: history.concat([{
+        squares: squares
+      }]),
+      xIsNext: !this.state.xIsNext
+    })
+  }
+
   render() {
+    const history = this.state.history;
+    const current = history[history.length - 1];
+    const winner = calculateWinner(current.squares);
+
+    let status;
+    if (winner) {
+      status = 'Winner: ' + winner;
+    } else {
+      status = 'Next Player: ' + (this.state.xIsNext ? 'X' : 'O');
+    }
+
     return (
       <div className="game">
         <div className="game-board">
-          <Board />
+          <Board 
+            squares={current.squares}
+            onClick={(i) => this.handlerClick(i)} />
         </div>
         <div className="game-info">
-          <div>{/* status */}</div>
+          <div>{status}</div>
           <ol>{/* TODO */}</ol>
         </div>
       </div>
@@ -109,9 +113,11 @@ class Game extends React.Component {
 }
 
 // ========================================
-
 ReactDOM.render(
-  <Game />,
+  <React.StrictMode>
+    <Game />,
+    <App />
+  </React.StrictMode>,
   document.getElementById('root')
 );
 
