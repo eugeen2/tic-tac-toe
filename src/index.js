@@ -1,10 +1,8 @@
-import React from 'react';
-import ReactDOM from 'react-dom';
-import './index.css';
-import App from './App';
-import reportWebVitals from './reportWebVitals';
-
-
+import React from "react";
+import ReactDOM from "react-dom";
+import "./index.css";
+import App from "./App";
+import reportWebVitals from "./reportWebVitals";
 
 // If you want to start measuring performance in your app, pass a function
 // to log results (for example: reportWebVitals(console.log))
@@ -14,21 +12,22 @@ reportWebVitals();
 /* 把 Square 组件重写为一个函数组件，如果你想写的组件只包含一个 render 方法，并且不包含 state，那么使用函数组件就会更简单 */
 function Square(props) {
   return (
-    < button className="square" onClick={props.onClick} >
-      { props.value}
-    </button >
+    <button className="square" onClick={props.onClick}>
+      {props.value}
+    </button>
   );
 }
 
 class Board extends React.Component {
-
   renderSquare(i) {
     /* 现在我们从 Board 组件向 Square 组件中传递两个 props 参数：value 和 onClick。
       onClick prop 是一个 Square 组件点击事件监听函数 */
-    return <Square
-      value={this.props.squares[i]}
-      onClick={() => this.props.onClick(i)}
-    />
+    return (
+      <Square
+        value={this.props.squares[i]}
+        onClick={() => this.props.onClick(i)}
+      />
+    );
   }
 
   render() {
@@ -58,15 +57,18 @@ class Game extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      history: [{
-        squares: Array(9).fill(null)
-      }],
-      xIsNext: true
-    }
+      history: [
+        {
+          squares: Array(9).fill(null),
+        },
+      ],
+      xIsNext: true,
+      stepNumber: 0,
+    };
   }
 
   handlerClick(i) {
-    const history = this.state.history;
+    const history = this.state.history.slice(0, this.state.stepNumber + 1);
     const current = history[history.length - 1];
     // 注意，我们调用了 .slice() 方法创建了 squares 数组的一个副本，而不是直接在现有的数组上进行修改。
     // 为什么不可变性在 React 中非常重要?  1.简化复杂的功能  2.跟踪数据的改变  3.确定在 React 中何时重新渲染
@@ -75,37 +77,58 @@ class Game extends React.Component {
     if (calculateWinner(squares) || squares[i]) {
       return;
     }
-    squares[i] = this.state.xIsNext ? 'X' : 'O';
+    squares[i] = this.state.xIsNext ? "X" : "O";
     this.setState({
-      history: history.concat([{
-        squares: squares
-      }]),
-      xIsNext: !this.state.xIsNext
-    })
+      history: history.concat([
+        {
+          squares: squares,
+        },
+      ]),
+      xIsNext: !this.state.xIsNext,
+      stepNumber: history.length,
+    });
+  }
+
+  jumpTo(step) {
+    this.setState({
+      stepNumber: step,
+      xIsNext: step % 2 == 0,
+    });
   }
 
   render() {
     const history = this.state.history;
-    const current = history[history.length - 1];
+    const current = history[this.state.stepNumber];
     const winner = calculateWinner(current.squares);
 
     let status;
     if (winner) {
-      status = 'Winner: ' + winner;
+      status = "Winner: " + winner;
     } else {
-      status = 'Next Player: ' + (this.state.xIsNext ? 'X' : 'O');
+      status = "Next Player: " + (this.state.xIsNext ? "X" : "O");
     }
+
+    const moves = history.map((step, move) => {
+      const desc = move ? "go to move #" + move : "go to game start";
+      return (
+        // 每次只要你构建动态列表的时候，都要指定一个合适的 key
+        <li key={move}>
+          <button onClick={() => this.jumpTo(move)}>{desc}</button>
+        </li>
+      );
+    });
 
     return (
       <div className="game">
         <div className="game-board">
-          <Board 
+          <Board
             squares={current.squares}
-            onClick={(i) => this.handlerClick(i)} />
+            onClick={(i) => this.handlerClick(i)}
+          />
         </div>
         <div className="game-info">
           <div>{status}</div>
-          <ol>{/* TODO */}</ol>
+          <ol>{moves}</ol>
         </div>
       </div>
     );
@@ -115,10 +138,10 @@ class Game extends React.Component {
 // ========================================
 ReactDOM.render(
   <React.StrictMode>
-    <Game />,
-    <App />
+    <Game />
+    {/* <App /> */}
   </React.StrictMode>,
-  document.getElementById('root')
+  document.getElementById("root")
 );
 
 /* 传入长度为 9 的数组，此函数将判断出获胜者，并根据情况返回 “X”，“O” 或 “null”。 */
