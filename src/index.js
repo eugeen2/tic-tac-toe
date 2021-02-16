@@ -16,37 +16,21 @@ import reportWebVitals from './reportWebVitals';
 // or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
 reportWebVitals();
 
-// 因为 Square 组件不再持有 state，因此每次它们被点击的时候，Square 组件就会从 Board 组件中接收值，并且通知 Board 组件。
-// 在 React 术语中，我们把目前的 Square 组件称做“受控组件”。在这种情况下，Board 组件完全控制了 Square 组件。
-class Square extends React.Component {
-
-  /** tips:
-  在 JavaScript class 中，每次你定义其子类的构造函数时，都需要调用 super 方法。
-  因此，在所有含有构造函数的的 React 组件中，构造函数必须以 super(props) 开头。 */
-  constructor(props) {
-    super(props);
-  }
-
-  render() {
-    return (
-      /* 在 Square 组件 render 方法中的 onClick 事件监听函数中调用 this.setState，
-      我们就可以在每次 <button> 被点击的时候通知 React 去重新渲染 Square 组件。 */
-      // <button className="square" onClick={function () { alert('click'); }}
-      <button
-        className="square"
-        onClick={() => this.props.onClick()}
-      >
-        {this.props.value}
-      </button>
-    );
-  }
+/* 把 Square 组件重写为一个函数组件，如果你想写的组件只包含一个 render 方法，并且不包含 state，那么使用函数组件就会更简单 */
+function Square(props) {
+  return (
+    < button className="square" onClick={props.onClick} >
+      { props.value}
+    </button >
+  );
 }
 
 class Board extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      squares: Array(9).fill(null)
+      squares: Array(9).fill(null),
+      xIsNext: true
     }
   }
 
@@ -55,8 +39,8 @@ class Board extends React.Component {
     // 为什么不可变性在 React 中非常重要?  1.简化复杂的功能  2.跟踪数据的改变  3.确定在 React 中何时重新渲染
     const squares = this.state.squares.slice();
     console.log(squares);
-    squares[i] = 'X';
-    this.setState({ squares: squares });
+    squares[i] = this.state.xIsNext ? 'X' : 'O';
+    this.setState({ squares: squares, xIsNext: !this.state.xIsNext });
   }
 
 
@@ -70,8 +54,9 @@ class Board extends React.Component {
   }
 
   render() {
-    const status = 'Next player: X';
-
+    // const status = 'Next player: X';
+    const status = 'Next player: ' + (this.state.xIsNext ? 'X' : 'O');
+    
     return (
       <div>
         <div className="status">{status}</div>
